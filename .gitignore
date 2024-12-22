@@ -1,0 +1,6 @@
+.vscode/
+makefile
+OpenGLProject
+cmake_install.cmake
+CMakeFiles/
+CMakeCache.txt
