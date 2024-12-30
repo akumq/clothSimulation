@@ -1,34 +1,47 @@
 cmake_minimum_required(VERSION 3.10)
 project(OpenGLProject)
 
-# Configuration macOS
+# Définir le standard C++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Configuration macOS et Homebrew
 if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES "arm64")
+    
+    # Ajout du chemin correct pour SFML
+    set(SFML_DIR "/opt/homebrew/Cellar/sfml@2/2.6.2/lib/cmake/SFML")
+    
+    # Ajout des chemins d'inclusion Homebrew
+    include_directories("/opt/homebrew/include")
+    link_directories("/opt/homebrew/lib")
 endif()
 
-# Trouver automatiquement tous les fichiers sources
-file(GLOB_RECURSE SOURCES 
+# Automatically find all source files
+file(GLOB_RECURSE SOURCES
     "src/*.cpp"
     "src/*.c"
 )
 
-# Trouver automatiquement tous les headers
+# Automatically find all header files
 file(GLOB_RECURSE HEADERS
     "include/*.hpp"
     "include/*.h"
 )
 
-# Packages
-find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
+# Find SFML
+find_package(SFML 2.6.2 COMPONENTS graphics window system REQUIRED)
 
-# Executable
+# Add executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
-# Linking
-target_link_libraries(${PROJECT_NAME}
+# Link SFML libraries
+target_link_libraries(${PROJECT_NAME} PRIVATE
     sfml-graphics
     sfml-window
     sfml-system
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE include) 
+# Include directories
+target_include_directories(${PROJECT_NAME} PRIVATE include)
