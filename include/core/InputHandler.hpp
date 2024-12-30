@@ -5,6 +5,8 @@
 #include "core/World.hpp"
 #include "core/Tile.hpp"
 
+#include "config/TileHandler.hpp"
+
 
 class InputHandler{
 
@@ -21,7 +23,7 @@ class InputHandler{
 
             if(mouse_pressed){
                 sf::Vector2f mouse_pos = (sf::Vector2f)sf::Mouse::getPosition(window);
-                world.addTile(mouse_pos);
+                world.addTile(mouse_pos,TileHandler::SAND);
             }
         };
 

@@ -11,7 +11,7 @@ void init_simulation(World& world) {
 
 int main() {
     sf::RenderWindow window(sf::VideoMode(Config::WIDTH, Config::HEIGHT), "SFML Project");
-    window.setFramerateLimit(10);
+    // window.setFramerateLimit(10);
 
     World world;
 

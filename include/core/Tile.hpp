@@ -5,10 +5,13 @@
 #include "config/Config.hpp"
 
 class Tile{
-
     public:
         sf::Vector2f position;
+        sf::Vector2f previous_position;
+        sf::Vector2f acceleration;
+        bool pinned;    
         bool hasChanged = false;
+
 
         Tile(int x,int y): position(x,y) {}; 
 
@@ -20,34 +23,29 @@ class Tile{
             if (oldPosition != newPosition){
                 hasChanged = true;
             }
-
         }
 
         void setPos(float x, float y) {
             setPos(sf::Vector2f(x, y));
         }
 
-        void setXPos(float x) {
-            sf::Vector2f newPosition(x, position.y);
-            setPos(newPosition);
+
+        virtual void update() {
+            if (!pinned) {
+                sf::Vector2f newPosition = position;
+                newPosition.y += 1; // Déplacement d'une case à la fois
+                
+                setPos(newPosition);
+            }
         }
 
-        void setYPos(float y) {
-            sf::Vector2f newPosition(position.x, y);
-            setPos(newPosition);
-        }
-
-        void update(){
-            // std::cout << position.y << "/" << std::trunc(Config::HEIGHT / Config::CELL_SIZE) << std::endl;
-            setYPos(std::min(position.y+1,std::trunc(Config::HEIGHT / Config::CELL_SIZE) -1));
-        }
-
-        sf::RectangleShape getShape(){
+        virtual sf::RectangleShape getShape(){
             sf::RectangleShape rect(sf::Vector2f(Config::CELL_SIZE, Config::CELL_SIZE));
             rect.setPosition(position * Config::CELL_SIZE);
             rect.setFillColor(sf::Color::White);
             return rect;
         };
+
 
 };
 

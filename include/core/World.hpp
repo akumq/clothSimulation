@@ -4,7 +4,10 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include "core/Tile.hpp"
+
 #include "config/Config.hpp"
+#include "config/TileHandler.hpp"
+
 
 
 struct VectorComparator
@@ -19,6 +22,7 @@ class World {
 
     public:
         std::map<sf::Vector2f, Tile*,VectorComparator> tileMap;
+        sf::Clock clock;
 
         World(){
         }
@@ -26,10 +30,11 @@ class World {
             std::map<sf::Vector2f, Tile*,VectorComparator> tileMap;
         }
 
-        void addTile(sf::Vector2f position){
+        void addTile(sf::Vector2f position, int type){
             position = toGridPosition(position);
+            Tile* tile = TileHandler::SwitchTile(position, type, this);
             std::cout << "\n Position x: \t" << position.x << "\n Position y: \t" << position.y << std::endl;
-            tileMap[position] = new Tile(position);
+            tileMap[position] = tile;
         }
 
         std::vector<sf::Vector2f> getNeighbors(const sf::Vector2f& position) const {
@@ -53,37 +58,43 @@ class World {
             return nullptr;
         }
         
-        void update(){
-            for (auto it = tileMap.begin(); it != tileMap.end();) {
-                Tile* tile = it->second;
-                if (tile->hasChanged) {
-                    sf::Vector2f oldPosition = it->first;
-                    sf::Vector2f newPosition = tile->position;
-                    tileMap[newPosition] = tile;
-                    std::swap(tileMap[newPosition], it->second);
-                    it = tileMap.erase(it);
-                    tile->hasChanged = false;
-                } else {
-                    ++it;
+        void update() {
+            if (clock.getElapsedTime().asSeconds() >= Config::TIME_STEP) {
+                std::vector<Tile*> tilesToUpdate;
+                
+                // Collecter les tuiles à mettre à jour
+                for (auto& pair : tileMap) {
+                    tilesToUpdate.push_back(pair.second);
                 }
-                tile->update();
+                
+                // Mettre à jour du bas vers le haut
+                std::sort(tilesToUpdate.begin(), tilesToUpdate.end(), 
+                    [](Tile* a, Tile* b) { return a->position.y > b->position.y; });
+                
+                for (Tile* tile : tilesToUpdate) {
+                    sf::Vector2f oldPos = tile->position;
+                    tile->update();
+                    
+                    // Vérifier collision avec le sol
+                    if (tile->position.y >= Config::HEIGHT / Config::CELL_SIZE) {
+                        tile->setPos(oldPos);
+                        continue;
+                    }
+                    
+                    // Vérifier collision avec autre tuile
+                    auto belowTile = getGridTile(tile->position);
+                    if (belowTile != nullptr && belowTile != tile) {
+                        tile->setPos(oldPos);
+                    } else if (tile->hasChanged) {
+                        tileMap.erase(oldPos);
+                        tileMap[tile->position] = tile;
+                        tile->hasChanged = false;
+                    }
+                }
+                
+                clock.restart();
             }
         }
-
-        // void moveTile(sf::Vector2f oldPosition, sf::Vector2f newPosition) {
-        //     std::cout << "\n old: \t"<< oldPosition.y << "\n new: \t"<<newPosition.y << std::endl;
-        //     auto it = tileMap.find(oldPosition);
-        //     // Tile tile = *it->second;
-        //     // tileMap.erase(oldPosition);
-        //     // tileMap[newPosition] = &tile;
-        //     if (it != tileMap.end()) {
-        //         Tile* tile = it->second;
-        //         tileMap.erase(it);
-        //         tileMap[newPosition] = tile;
-        //     } else {
-        //         std::cout << "No tile found at position (" << oldPosition.x << ", " << oldPosition.y << ")" << std::endl;
-        //     }
-        // }
 
         void draw(sf::RenderWindow& window){
            for (auto& pair : tileMap) {
